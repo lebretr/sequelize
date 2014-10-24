@@ -1,4 +1,4 @@
-# Sequelize [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/lebretr/sequelize/trend.png)](https://bitdeli.com/free "Bitdeli Badge") [![Build Status](https://travis-ci.org/lebretr/sequelize.svg?branch=1.7.0-Oracle)](https://travis-ci.org/lebretr/sequelize) [![Dependency Status](https://david-dm.org/lebretr/sequelize.png)](https://david-dm.org/sequelize/sequelize)
+# Sequelize [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/lebretr/sequelize/trend.png)](https://bitdeli.com/free "Bitdeli Badge") [![Build Status](https://travis-ci.org/lebretr/sequelize.svg?branch=1.7.0-Oracle)](https://travis-ci.org/lebretr/sequelize) [![Dependency Status](https://david-dm.org/lebretr/sequelize.png)](https://david-dm.org/lebretr/sequelize)
 
 MySQL, MariaDB, PostgresSQL, and SQLite Object Relational Mapper (ORM) for [node](http://nodejs.org).
 
