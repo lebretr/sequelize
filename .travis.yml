@@ -7,11 +7,7 @@ script:
 
 notifications:
   email:
-    - sascha@depold.com
-  hipchat:
-    - 40e8850aaba9854ac4c9963bd33f8b@253477
-  irc:
-    - "chat.freenode.net#sequelizejs"
+    - esus62@gmail.com
 
 env:
   - DB=mysql DIALECT=mysql
@@ -28,7 +24,6 @@ node_js:
 
 branches:
   only:
-    - master
     - 1.7.0
     - 1.7.0-Oracle
 
