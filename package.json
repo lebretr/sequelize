@@ -3,45 +3,12 @@
   "description": "Multi dialect ORM for Node.JS",
   "version": "1.7.10-0.1",
   "author": "Lebret Rémi <remi.lebret@ext.adeoservices.com>",
-  "contributors": [
-    {
-      "name": "Sascha Depold",
-      "email": "sascha@depold.com"
-    },
-    {
-      "name": "Meg Sharkey",
-      "email": "meg@metamarkets.com"
-    },
-    {
-      "name": "Chase Geigle",
-      "email": "sky@skytrife.com"
-    },
-    {
-      "name": "Jan Aagaard Meier",
-      "email": [
-        "janzeh@gmail.com",
-        "jmei@itu.dk"
-      ]
-    },
-    {
-      "name": "Daniel Durante",
-      "email": "me@danieldurante.com"
-    },
-    {
-      "name": "Mick Hansen",
-      "email": "mick.kasper.hansen@gmail.com"
-    },
-    {
-      "name": "Rémi Lebret",
-      "email": "remi.lebret@ext.adeoservices.com"
-    }
-  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sequelize/sequelize.git"
+    "url": "https://github.com/lebretr/sequelize-oracle.git"
   },
   "bugs": {
-    "url": "https://github.com/sequelize/sequelize/issues"
+    "url": "https://github.com/lebretr/sequelize-oracle/issues"
   },
   "dependencies": {
     "commander": "~2.1.0",
