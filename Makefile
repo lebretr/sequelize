@@ -1,3 +1,4 @@
+
 REPORTER ?= spec
 TESTS = $(shell find ./test/* -name "*.test.js")
 DIALECT ?= mysql
@@ -22,13 +23,15 @@ test:
 	fi
 endif
 
+test-only:
+	./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS); \
+
 jshint:
 	./node_modules/.bin/jshint lib
-	
+
 cover:
 	rm -rf coverage \
-	make teaser && ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -- -u exports --report lcovonly -- -R spec --  $(TESTS); \
-	mv coverage coverage-$(DIALECT) \
+	make teaser && ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -t 10000 $(TESTS); \
 
 mariadb:
 	@DIALECT=mariadb make test
@@ -46,18 +49,23 @@ binary:
 mariadb-cover:
 	rm -rf coverage
 	@DIALECT=mariadb make cover
+	mv coverage coverage-mariadb
 sqlite-cover:
 	rm -rf coverage
 	@DIALECT=sqlite make cover
+	mv coverage coverage-sqlite
 mysql-cover:
 	rm -rf coverage
 	@DIALECT=mysql make cover
+	mv coverage coverage-mysql
 postgres-cover:
 	rm -rf coverage
 	@DIALECT=postgres make cover
+	mv coverage coverage-postgres
 postgres-native-cover:
 	rm -rf coverage
 	@DIALECT=postgres-native make cover
+	mv coverage coverage-postgresnative
 binary-cover:
 	rm -rf coverage
 	@./test/binary/sequelize.test.bats
@@ -68,7 +76,7 @@ merge-coverage:
 	./node_modules/.bin/lcov-result-merger 'coverage-*/lcov.info' 'coverage/lcov.info'
 
 coveralls-send:
-	cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage
+	cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage*
 
 codeclimate-send:
 	npm install -g codeclimate-test-reporter
@@ -88,3 +96,5 @@ coveralls: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb
 codeclimate: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb-cover merge-coverage codeclimate-send
 
 .PHONY: sqlite mysql postgres pgsql postgres-native postgresn all test
+Status API Training Shop Blog About
+© 2014 GitHub, Inc. Terms Privacy Security Contact
