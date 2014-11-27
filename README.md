@@ -3,8 +3,8 @@
 MySQL, MariaDB, PostgresSQL, SQLite and Oracle Object Relational Mapper (ORM) for [node](http://nodejs.org).
 
 ### Note
-sequelize-oracle is a fork of [sequelize@1.7.0](https://github.com/sequelize/sequelize)  
+sequelize-oracle is a fork of [sequelize@1.7.0](https://github.com/sequelize/sequelize/tree/1.7.0)  
 this fork add support of DML statements for Oracle  
-If you don't need Oracle support, prefer the original [Sequelize](https://github.com/sequelize/sequelize)  
+If you don't need Oracle support, prefer the original [Sequelize](http://sequelizejs.com/)  
 
 

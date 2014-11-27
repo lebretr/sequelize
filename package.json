@@ -1,7 +1,7 @@
 {
   "name": "sequelize-oracle",
   "description": "Multi dialect ORM for Node.JS",
-  "version": "1.7.10-0.1",
+  "version": "1.7.10-0.2",
   "author": "Lebret Rémi <remi.lebret@ext.adeoservices.com>",
   "repository": {
     "type": "git",
