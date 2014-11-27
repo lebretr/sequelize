@@ -63,6 +63,10 @@ merge-coverage:
 coveralls-send:
 	cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage
 
+codeclimate-send:
+	npm install -g codeclimate-test-reporter
+	CODECLIMATE_REPO_TOKEN=b3a6d1113ecc9a912056cc0adc1490d3b8990069fb00f27dba6eefe61cd637c3 codeclimate < coverage/lcov.info
+
 # test aliases
 
 pgsql: postgres
@@ -74,5 +78,6 @@ all: sqlite mysql postgres postgres-native mariadb
 
 all-cover: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb-cover merge-coverage
 coveralls: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb-cover merge-coverage coveralls-send
+codeclimate: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb-cover merge-coverage codeclimate-send
 
 .PHONY: sqlite mysql postgres pgsql postgres-native postgresn all test
