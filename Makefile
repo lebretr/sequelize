@@ -11,12 +11,16 @@ teaser:
 	node -pe "Array(20 + '$(DIALECT)'.length + 3).join('#')" && \
 	echo ''
 
+ifeq (true,$(COVERAGE))
+test: codeclimate
+else
 test:
 	@if [ "$$GREP" ]; then \
-		make teaser && ./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) -g "$$GREP" $(TESTS); \
+		make jshint && make teaser && ./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) -g "$$GREP" $(TESTS); \
 	else \
-		make teaser && ./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS); \
+		make jshint && make teaser && ./node_modules/mocha/bin/mocha --globals setImmediate,clearImmediate --check-leaks --colors -t 10000 --reporter $(REPORTER) $(TESTS); \
 	fi
+endif
 
 cover:
 	rm -rf coverage \
