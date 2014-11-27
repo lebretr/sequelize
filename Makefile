@@ -22,6 +22,9 @@ test:
 	fi
 endif
 
+jshint:
+	./node_modules/.bin/jshint lib
+	
 cover:
 	rm -rf coverage \
 	make teaser && ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -- -u exports --report lcovonly -- -R spec --  $(TESTS); \
