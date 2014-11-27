@@ -96,5 +96,3 @@ coveralls: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb
 codeclimate: sqlite-cover mysql-cover postgres-cover postgres-native-cover mariadb-cover merge-coverage codeclimate-send
 
 .PHONY: sqlite mysql postgres pgsql postgres-native postgresn all test
-Status API Training Shop Blog About
-© 2014 GitHub, Inc. Terms Privacy Security Contact
