@@ -24,6 +24,7 @@ node_js:
 branches:
   only:
     - 1.7.0-Oracle
+    - 1.7.0-Oracle-dev
 
 matrix:
   fast_finish: true
