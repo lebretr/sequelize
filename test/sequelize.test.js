@@ -15,7 +15,7 @@ var chai        = require('chai')
 chai.Assertion.includeStack = true
 
 var qq = function(str) {
-  if (dialect == 'postgres' || dialect == 'sqlite') {
+  if (dialect == 'postgres' || dialect == 'sqlite' || dialect == 'oracle') {
     return '"' + str + '"'
   } else if (Support.dialectIsMySQL()) {
     return '`' + str + '`'
@@ -87,6 +87,8 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
                 expect(err.message).to.match(/Access denied for user/)
               } else if (dialect === 'postgres') {
                 expect(err.message).to.match(/invalid port number/)
+              } else if (dialect === 'oracle') {
+                expect(err.message).to.match(/ORA-12541/)
               } else {
                 expect(err.message).to.match(/Failed to authenticate/)
               }
@@ -183,10 +185,16 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
         username: DataTypes.STRING
       })
 
-      this.insertQuery = "INSERT INTO " + qq(this.User.tableName) + " (username, " + qq("createdAt") + ", " + qq("updatedAt") + ") VALUES ('john', '2012-01-01 10:10:10', '2012-01-01 10:10:10')"
+      if(dialect==='oracle'){
+        this.insertQuery = "INSERT INTO " + qq(this.User.tableName) + " (" + qq("username") + ", " + qq("createdAt") + ", " + qq("updatedAt") + ") VALUES ('john', to_timestamp('2012-01-01 10:10:10','YYYY-MM-DD HH:mi:ss'), to_timestamp('2012-01-01 10:10:10','YYYY-MM-DD HH:mi:ss'))"
+      }else{
+        this.insertQuery = "INSERT INTO " + qq(this.User.tableName) + " (username, " + qq("createdAt") + ", " + qq("updatedAt") + ") VALUES ('john', '2012-01-01 10:10:10', '2012-01-01 10:10:10')"
+      }
 
       this.User.sync({ force: true }).success(function() {
         done()
+      }).error(function(err) {
+        throw err;
       })
     })
 
@@ -240,8 +248,14 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
       var self = this
       self.sequelize.query('DELETE FROM ' + qq(self.User.tableName)).complete(function() {
         self.sequelize.query(self.insertQuery).success(function() {
+          var sql="";
+          if(dialect==='oracle'){
+            sql="select " + qq("username") + " as " + qq("user.username") + " from " + qq(self.User.tableName) + "";
+          }else{
+            sql="select username as " + qq("user.username") + " from " + qq(self.User.tableName) + "";
+          }
           self.sequelize
-            .query("select username as " + qq("user.username") + " from " + qq(self.User.tableName) + "")
+            .query(sql)
             .complete(function(err, users) {
               expect(err).to.be.null
               expect(users.map(function(u){ return u.user })).to.deep.equal([{'username':'john'}])
@@ -282,9 +296,13 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
     })
 
     it('destructs dot separated attributes when doing a raw query', function(done) {
-      var tickChar = (dialect === 'postgres') ? '"' : '`'
-        , sql      = "select 1 as " + Sequelize.Utils.addTicks('foo.bar.baz', tickChar)
-
+      var tickChar = (dialect === 'postgres' || dialect === 'oracle') ? '"' : '`';
+      var sql="";
+      if(dialect==='oracle'){
+        sql="select 1 as " + Sequelize.Utils.addTicks('foo.bar.baz', tickChar) + "from dual";
+      }else{
+        sql="select 1 as " + Sequelize.Utils.addTicks('foo.bar.baz', tickChar);
+      }
       this.sequelize.query(sql, null, { raw: true }).success(function(result) {
         expect(result).to.deep.equal([ { foo: { bar: { baz: 1 } } } ])
         done()
@@ -292,82 +310,150 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
     })
 
     it('replaces token with the passed array', function(done) {
-      this.sequelize.query('select ? as foo, ? as bar', null, { raw: true }, [ 1, 2 ]).success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql="select ? as \"foo\", ? as \"bar\" from dual"
+      }else{
+        sql="select ? as foo, ? as bar";
+      }
+      this.sequelize.query(sql, null, { raw: true }, [ 1, 2 ]).success(function(result) {
         expect(result).to.deep.equal([{ foo: 1, bar: 2 }])
         done()
       })
     })
 
     it('replaces named parameters with the passed object', function(done) {
-      this.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
+      this.sequelize.query(sql, null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
         expect(result).to.deep.equal([{ foo: 1, bar: 2 }])
         done()
       })
     })
 
     it('replaces named parameters with the passed object and ignore those which does not qualify', function(done) {
-      this.sequelize.query('select :one as foo, :two as bar, \'00:00\' as baz', null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar", \'00:00\' as "baz" from dual';
+      }else{
+        sql='select :one as foo, :two as bar, \'00:00\' as baz';
+      }
+      this.sequelize.query(sql, null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
         expect(result).to.deep.equal([{ foo: 1, bar: 2, baz: '00:00' }])
         done()
       })
     })
 
     it('replaces named parameters with the passed object using the same key twice', function(done) {
-      this.sequelize.query('select :one as foo, :two as bar, :one as baz', null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar", :one as "baz" from dual';
+      }else{
+        sql='select :one as foo, :two as bar, :one as baz';
+      }
+      this.sequelize.query(sql, null, { raw: true }, { one: 1, two: 2 }).success(function(result) {
         expect(result).to.deep.equal([{ foo: 1, bar: 2, baz: 1 }])
         done()
       })
     })
 
     it('replaces named parameters with the passed object having a null property', function(done) {
-      this.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, { one: 1, two: null }).success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
+      this.sequelize.query(sql, null, { raw: true }, { one: 1, two: null }).success(function(result) {
         expect(result).to.deep.equal([{ foo: 1, bar: null }])
         done()
+      }).error(function(err) {
+        throw err;
       })
     })
 
     it('throw an exception when key is missing in the passed object', function(done) {
-      var self = this
+      var self = this;
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar", :three as "baz" from dual';
+      }else{
+        sql='select :one as foo, :two as bar, :three as baz';
+      }
       expect(function() {
-        self.sequelize.query('select :one as foo, :two as bar, :three as baz', null, { raw: true }, { one: 1, two: 2 })
+        self.sequelize.query(sql, null, { raw: true }, { one: 1, two: 2 })
       }).to.throw(Error, /Named parameter ":\w+" has no value in the given object\./g)
       done()
     })
 
     it('throw an exception with the passed number', function(done) {
       var self = this
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
       expect(function() {
-        self.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, 2)
+        self.sequelize.query(sql, null, { raw: true }, 2)
       }).to.throw(Error, /Named parameter ":\w+" has no value in the given object\./g)
       done()
     })
 
     it('throw an exception with the passed empty object', function(done) {
       var self = this
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
       expect(function() {
-        self.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, {})
+        self.sequelize.query(sql, null, { raw: true }, {})
       }).to.throw(Error, /Named parameter ":\w+" has no value in the given object\./g)
       done()
     })
 
     it('throw an exception with the passed string', function(done) {
       var self = this
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
       expect(function() {
-        self.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, 'foobar')
+        self.sequelize.query(sql, null, { raw: true }, 'foobar')
       }).to.throw(Error, /Named parameter ":\w+" has no value in the given object\./g)
       done()
     })
 
     it('throw an exception with the passed date', function(done) {
       var self = this
+      var sql="";
+      if(dialect==='oracle'){
+        sql='select :one as "foo", :two as "bar" from dual';
+      }else{
+        sql='select :one as foo, :two as bar';
+      }
       expect(function() {
-        self.sequelize.query('select :one as foo, :two as bar', null, { raw: true }, new Date())
+        self.sequelize.query(sql, null, { raw: true }, new Date())
       }).to.throw(Error, /Named parameter ":\w+" has no value in the given object\./g)
       done()
     })
 
     it('handles AS in conjunction with functions just fine', function(done) {
-      this.sequelize.query('SELECT ' + (dialect === "sqlite" ? 'date(\'now\')' : 'NOW()') + ' AS t').success(function(result) {
+      var sql="";
+      if(dialect==='oracle'){
+        sql="SELECT TO_CHAR (SYSDATE, 'MM-DD-YYYY HH24:MI:SS') AS t from dual";
+      }else{
+        sql='SELECT ' + (dialect === "sqlite" ? 'date(\'now\')' : 'NOW()') + ' AS t';
+      }
+      this.sequelize.query(sql).success(function(result) {
         expect(moment(result[0].t).isValid()).to.be.true
         done()
       })
@@ -431,7 +517,11 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
         , Photo = this.sequelize.define('Foto', { name: DataTypes.STRING }, { tableName: 'photos' })
       Photo.sync({ force: true }).success(function() {
         self.sequelize.getQueryInterface().showAllTables().success(function(tableNames) {
-          expect(tableNames).to.include('photos')
+          if(dialect==='oracle'){
+            expect(tableNames[0]['TABLE_NAME']).to.include('photos')
+          }else{
+            expect(tableNames).to.include('photos')
+          }          
           done()
         })
       })
@@ -478,7 +568,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
               'FATAL:  role "bar" does not exist',
               'password authentication failed for user "bar"'
             ].indexOf(err.message.trim()) !== -1)
-          } else {
+          }else if (dialect === "oracle") {
+            expect(err.message.toString()).to.match(/.*ORA-12541.*/)            
+          }else {
             expect(err.message.toString()).to.match(/.*Access\ denied.*/)
           }
           done()
@@ -682,13 +774,24 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
         })
       })
     })
+    
 
     describe('table', function() {
-      [
-        { id: { type: DataTypes.BIGINT } },
-        { id: { type: DataTypes.STRING, allowNull: true } },
-        { id: { type: DataTypes.BIGINT, allowNull: false, primaryKey: true, autoIncrement: true } }
-      ].forEach(function(customAttributes) {
+      var data=[];
+      if(dialect!=='oracle'){
+        data=[
+          { id: { type: DataTypes.BIGINT } },
+          { id: { type: DataTypes.STRING, allowNull: true } },
+          { id: { type: DataTypes.BIGINT, allowNull: false, primaryKey: true, autoIncrement: true } }
+        ]
+      }else{
+        data=[
+          { id: { type: DataTypes.DECIMAL } },
+          { id: { type: DataTypes.STRING, allowNull: true } },
+          { id: { type: DataTypes.DECIMAL, allowNull: false, primaryKey: true, autoIncrement: true } }
+        ]
+      }
+      data.forEach(function(customAttributes) {
 
         it('should be able to override options on the default attributes', function(done) {
           var Picture = this.sequelize.define('picture', _.cloneDeep(customAttributes))
@@ -705,73 +808,75 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
 
       })
     })
+    
+    if(dialect!=='oracle'){
+      describe('transaction', function() {
+        beforeEach(function(done) {
+          var self = this
 
-    describe('transaction', function() {
-      beforeEach(function(done) {
-        var self = this
-
-        Support.prepareTransactionTest(this.sequelize, function(sequelize) {
-          self.sequelizeWithTransaction = sequelize
-          done()
+          Support.prepareTransactionTest(this.sequelize, function(sequelize) {
+            self.sequelizeWithTransaction = sequelize
+            done()
+          })
         })
-      })
 
-      it('is a transaction method available', function() {
-        expect(Support.Sequelize).to.respondTo('transaction')
-      })
-
-      it('passes a transaction object to the callback', function(done) {
-        this.sequelizeWithTransaction.transaction(function(t) {
-          expect(t).to.be.instanceOf(Transaction)
-          done()
+        it('is a transaction method available', function() {
+          expect(Support.Sequelize).to.respondTo('transaction')
         })
-      })
 
-      it('returns a transaction object', function() {
-        expect(this.sequelizeWithTransaction.transaction(function(){})).to.be.instanceOf(Transaction)
-      })
-
-      it('allows me to define a callback on the result', function(done) {
-        this
-          .sequelizeWithTransaction
-          .transaction(function(t) { t.commit() })
-          .done(done)
-      })
-
-      it('allows me to define a callback on the transaction object', function(done) {
-        this.sequelizeWithTransaction.transaction(function(t) {
-          t.done(done)
-          t.commit()
+        it('passes a transaction object to the callback', function(done) {
+          this.sequelizeWithTransaction.transaction(function(t) {
+            expect(t).to.be.instanceOf(Transaction)
+            done()
+          })
         })
-      })
 
-      if (dialect === 'sqlite') {
-        it("correctly scopes transaction from other connections", function(done) {
-          var TransactionTest = this.sequelizeWithTransaction.define('TransactionTest', { name: DataTypes.STRING }, { timestamps: false })
-            , self            = this
+        it('returns a transaction object', function() {
+          expect(this.sequelizeWithTransaction.transaction(function(){})).to.be.instanceOf(Transaction)
+        })
 
-          var count = function(transaction, callback) {
-            var sql = self.sequelizeWithTransaction.getQueryInterface().QueryGenerator.selectQuery('TransactionTests', { attributes: [['count(*)', 'cnt']] })
+        it('allows me to define a callback on the result', function(done) {
+          this
+            .sequelizeWithTransaction
+            .transaction(function(t) { t.commit() })
+            .done(done)
+        })
 
-            self
-              .sequelizeWithTransaction
-              .query(sql, null, { plain: true, raw: true, transaction: transaction })
-              .success(function(result) { callback(result.cnt) })
-          }
+        it('allows me to define a callback on the transaction object', function(done) {
+          this.sequelizeWithTransaction.transaction(function(t) {
+            t.done(done)
+            t.commit()
+          })
+        })
 
-          TransactionTest.sync({ force: true }).success(function() {
-            self.sequelizeWithTransaction.transaction(function(t1) {
-              self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'foo\');', null, { plain: true, raw: true, transaction: t1 }).success(function() {
-                count(null, function(cnt) {
-                  expect(cnt).to.equal(0)
+        if (dialect === 'sqlite') {
+          it("correctly scopes transaction from other connections", function(done) {
+            var TransactionTest = this.sequelizeWithTransaction.define('TransactionTest', { name: DataTypes.STRING }, { timestamps: false })
+              , self            = this
 
-                  count(t1, function(cnt) {
-                    expect(cnt).to.equal(1)
+            var count = function(transaction, callback) {
+              var sql = self.sequelizeWithTransaction.getQueryInterface().QueryGenerator.selectQuery('TransactionTests', { attributes: [['count(*)', 'cnt']] })
 
-                    t1.commit().success(function() {
-                      count(null, function(cnt) {
-                        expect(cnt).to.equal(1)
-                        done()
+              self
+                .sequelizeWithTransaction
+                .query(sql, null, { plain: true, raw: true, transaction: transaction })
+                .success(function(result) { callback(result.cnt) })
+            }
+
+            TransactionTest.sync({ force: true }).success(function() {
+              self.sequelizeWithTransaction.transaction(function(t1) {
+                self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'foo\');', null, { plain: true, raw: true, transaction: t1 }).success(function() {
+                  count(null, function(cnt) {
+                    expect(cnt).to.equal(0)
+
+                    count(t1, function(cnt) {
+                      expect(cnt).to.equal(1)
+
+                      t1.commit().success(function() {
+                        count(null, function(cnt) {
+                          expect(cnt).to.equal(1)
+                          done()
+                        })
                       })
                     })
                   })
@@ -779,42 +884,42 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
               })
             })
           })
-        })
-      } else {
-        it("correctly handles multiple transactions", function(done) {
-          var TransactionTest = this.sequelizeWithTransaction.define('TransactionTest', { name: DataTypes.STRING }, { timestamps: false })
-            , self            = this
+        } else {
+          it("correctly handles multiple transactions", function(done) {
+            var TransactionTest = this.sequelizeWithTransaction.define('TransactionTest', { name: DataTypes.STRING }, { timestamps: false })
+              , self            = this
 
-          var count = function(transaction, callback) {
-            var sql = self.sequelizeWithTransaction.getQueryInterface().QueryGenerator.selectQuery('TransactionTests', { attributes: [['count(*)', 'cnt']] })
+            var count = function(transaction, callback) {
+              var sql = self.sequelizeWithTransaction.getQueryInterface().QueryGenerator.selectQuery('TransactionTests', { attributes: [['count(*)', 'cnt']] })
 
-            self
-              .sequelizeWithTransaction
-              .query(sql, null, { plain: true, raw: true, transaction: transaction })
-              .success(function(result) { callback(parseInt(result.cnt, 10)) })
-          }
+              self
+                .sequelizeWithTransaction
+                .query(sql, null, { plain: true, raw: true, transaction: transaction })
+                .success(function(result) { callback(parseInt(result.cnt, 10)) })
+            }
 
-          TransactionTest.sync({ force: true }).success(function() {
-            self.sequelizeWithTransaction.transaction(function(t1) {
-              self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'foo\');', null, { plain: true, raw: true, transaction: t1 }).success(function() {
-                self.sequelizeWithTransaction.transaction(function(t2) {
-                  self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'bar\');', null, { plain: true, raw: true, transaction: t2 }).success(function() {
-                    count(null, function(cnt) {
-                      expect(cnt).to.equal(0)
+            TransactionTest.sync({ force: true }).success(function() {
+              self.sequelizeWithTransaction.transaction(function(t1) {
+                self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'foo\');', null, { plain: true, raw: true, transaction: t1 }).success(function() {
+                  self.sequelizeWithTransaction.transaction(function(t2) {
+                    self.sequelizeWithTransaction.query('INSERT INTO ' + qq('TransactionTests') + ' (' + qq('name') + ') VALUES (\'bar\');', null, { plain: true, raw: true, transaction: t2 }).success(function() {
+                      count(null, function(cnt) {
+                        expect(cnt).to.equal(0)
 
-                      count(t1, function(cnt) {
-                        expect(cnt).to.equal(1)
-
-                        count(t2, function(cnt) {
+                        count(t1, function(cnt) {
                           expect(cnt).to.equal(1)
 
-                          t2.rollback().success(function() {
-                            count(t2, function(cnt) {
-                              expect(cnt).to.equal(0)
+                          count(t2, function(cnt) {
+                            expect(cnt).to.equal(1)
 
-                              t1.commit().success(function() {
-                                count(null, function(cnt) {
-                                  expect(cnt).to.equal(1)
+                            t2.rollback().success(function() {
+                              count(t2, function(cnt) {
+                                expect(cnt).to.equal(0)
+
+                                t1.commit().success(function() {
+                                  count(null, function(cnt) {
+                                    expect(cnt).to.equal(1)
+                                  })
                                 })
                               })
                             })
@@ -824,14 +929,20 @@ describe(Support.getTestDialectTeaser("Sequelize"), function () {
                     })
                   })
                 })
+              }).done(function() {
+                done()
               })
-            }).done(function() {
-              done()
             })
           })
-        })
-      }
+        }
 
-    })
+      })
+    }else{
+      describe('transaction', function() {
+        it('!!!!!!!!!!!!!!!!!!!!!!TRANSACTION NOT DEVELOPPED FOR ORACLE!!!!!!!!!!!!!!!!!!', function(done) {
+          done()
+        })
+      })
+    }
   })
 })
