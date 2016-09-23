@@ -7,3 +7,4 @@ Forked repository: https://github.com/adeo-proxideco/sequelize-oracle
 #_Change logs_
 * 0.0.4 Add destroy function for deleting objects
 * 0.0.5 Add $regexp_like comparator. $regexp_like: 'string' 
+* 0.0.6 Add TEXT (CLOB) type
