@@ -46,3 +46,11 @@ Hey! I'm Nhua Nhua, who came from Mars. Wish you have a nice day and feel comfor
       res.sendStatus(200);
     });
     ```
+ - 0.0.9 Fix add, update CLOB. Add new function insert CLOB (Recommend)
+    - Sequelize.prototype.insertCLOB = function(model, data, primaryKey, ClobFields, done)
+    ```javascript
+    Sequelize
+      .insertCLOB(model, req.body, 'ID', ['Field1_type_clob', 'Field2_type_clob'], function (err, result) {
+          res.send(result);
+        });
+    ```
