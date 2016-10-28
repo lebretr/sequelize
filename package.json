@@ -1,35 +1,18 @@
 {
-  "name": "sequelize-oracle",
+  "name": "cu8-sequelize-oracle",
   "description": "Multi dialect ORM for Node.JS/io.js",
-  "version": "3.3.2-0.0",
-  "author": "Lebret Rémi",
-  "contributors": [
-    {
-      "name": "Sascha Depold",
-      "email": "sascha@depold.com"
-    },
-    {
-      "name": "Jan Aagaard Meier",
-      "email": [
-        "janzeh@gmail.com",
-        "jmei@itu.dk"
-      ]
-    },
-    {
-      "name": "Daniel Durante",
-      "email": "me@danieldurante.com"
-    },
-    {
-      "name": "Mick Hansen",
-      "email": "mick.kasper.hansen@gmail.com"
-    }
-  ],
+  "version": "0.1.0",
+  "author": "Nhuan",
+  "contributors": [{
+    "name": "Hoang Duc Nhuan",
+    "email": "nhuan.hoangduc@outlook.com"
+  }],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lebretr/sequelize-oracle.git"
+    "url": "https://github.com/nhuanhoangduc/cu8-sequelize-oracle.git"
   },
   "bugs": {
-    "url": "https://github.com/lebretr/sequelize-oracle/issues"
+    "url": "https://github.com/nhuanhoangduc/cu8-sequelize-oracle/issues"
   },
   "dependencies": {
     "bluebird": "~2.9.24",
@@ -60,9 +43,6 @@
     "lcov-result-merger": "~1.0.0",
     "mocha": "^2.2.1",
     "mysql": "~2.6.2",
-    "pg": "^4.2.0",
-    "pg-hstore": "^2.3.1",
-    "pg-native": "^1.8.0",
     "sinon": "^1.14.1",
     "sinon-chai": "^2.7.0",
     "sqlite3": "^3.0.6",
