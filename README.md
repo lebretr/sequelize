@@ -6,7 +6,6 @@ Hey! I'm Nhua Nhua, who came from Mars. Wish you have a nice day and feel comfor
 
 
 > **Note:**
-
 > - Fix old functions and add more features to sequelize-oracle
 > - Forked repository: [Sequelize-oracle](https://github.com/adeo-proxideco/sequelize-oracle)
 
@@ -30,14 +29,6 @@ Hey! I'm Nhua Nhua, who came from Mars. Wish you have a nice day and feel comfor
 
         }).catch(next);
     ```
-    - Sequelize.prototype.insertCLOB = function(model, data, ClobFields, done)
-    ```javascript
-    Sequelize
-      .insertCLOB(model, req.body, ['Field1_type_clob', 'Field2_type_clob'], function (err, result) {
-          res.send(result);
-        });
-    ```
-
     - Sequelize.prototype.updateCLOB = function(model, data, search, ClobFields, done)
     ```javascript
     Sequelize.updateCLOB(model, req.body, {ID: req.body.ID}, ['Field1_type_clob', 'Field2_type_clob'], function (err) {
@@ -46,7 +37,6 @@ Hey! I'm Nhua Nhua, who came from Mars. Wish you have a nice day and feel comfor
       res.sendStatus(200);
     });
     ```
- - 0.0.9 Fix add, update CLOB. Add new function insert CLOB (Recommend)
     - Sequelize.prototype.insertCLOB = function(model, data, primaryKey, ClobFields, done)
     ```javascript
     Sequelize
