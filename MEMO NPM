@@ -1,0 +1,7 @@
+memo:
+
+npm publish
+
+npm dist-tag add sequelize-oracle@3.3.2-0.0 latest
+
+npm view sequelize-oracle
